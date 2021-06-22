@@ -101,19 +101,19 @@ Machine::ReadMem(int addr, int size, int *value)
     }
     switch (size) {
       case 1:
-	data = mainMemory[physicalAddress];
-	*value = data;
-	break;
+		data = mainMemory[physicalAddress];
+		*value = data;
+		break;
 	
       case 2:
-	data = *(unsigned short *) &mainMemory[physicalAddress];
-	*value = ShortToHost(data);
-	break;
+		data = *(unsigned short *) &mainMemory[physicalAddress];
+		*value = ShortToHost(data);
+		break;
 	
       case 4:
-	data = *(unsigned int *) &mainMemory[physicalAddress];
-	*value = WordToHost(data);
-	break;
+		data = *(unsigned int *) &mainMemory[physicalAddress];
+		*value = WordToHost(data);
+		break;
 
       default: ASSERT(FALSE);
     }
@@ -145,8 +145,8 @@ Machine::WriteMem(int addr, int size, int value)
 
     exception = Translate(addr, &physicalAddress, size, TRUE);
     if (exception != NoException) {
-	RaiseException(exception, addr);
-	return FALSE;
+		RaiseException(exception, addr);
+		return FALSE;
     }
     switch (size) {
       case 1:
@@ -156,12 +156,12 @@ Machine::WriteMem(int addr, int size, int value)
       case 2:
 		*(unsigned short *) &mainMemory[physicalAddress]
 			= ShortToMachine((unsigned short) (value & 0xffff));
-	break;
+		break;
       
       case 4:
 		*(unsigned int *) &mainMemory[physicalAddress]
 			= WordToMachine((unsigned int) value);
-	break;
+		break;
 	
       default:ASSERT(FALSE);
     }
@@ -194,8 +194,8 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     DEBUG(dbgAddr, "\tTranslate " << virtAddr << (writing ? " , write" : " , read"));
 // check for alignment errors
     if (((size == 4) && (virtAddr & 0x3)) || ((size == 2) && (virtAddr & 0x1))){
-	DEBUG(dbgAddr, "Alignment problem at " << virtAddr << ", size " << size);
-	return AddressErrorException;
+		DEBUG(dbgAddr, "Alignment problem at " << virtAddr << ", size " << size);
+		return AddressErrorException;
     }
     
     // we must have either a TLB or a page table, but not both!
@@ -208,49 +208,49 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     offset = (unsigned) virtAddr % PageSize;
 
     if (tlb == NULL) {		// => page table => vpn is index into table
-	if (vpn >= pageTableSize) {
-	    DEBUG(dbgAddr, "Illegal virtual page # " << virtAddr);
-	    return AddressErrorException;
-	} else if (!pageTable[vpn].valid) {
-	    DEBUG(dbgAddr, "Invalid virtual page # " << virtAddr);
-		if (memoryPagingLock == NULL)
-			memoryPagingLock = new Lock("memoryPagingLock");
+		if (vpn >= pageTableSize) {
+			DEBUG(dbgAddr, "Illegal virtual page # " << virtAddr);
+			return AddressErrorException;
+		} else if (!pageTable[vpn].valid) {
+			DEBUG(dbgAddr, "Invalid virtual page # " << virtAddr);
+			if (memoryPagingLock == NULL)
+				memoryPagingLock = new Lock("memoryPagingLock");
 
-		memoryPagingLock->Acquire();
-		kernel->currentThread->space->pageFault(vpn);
-		memoryPagingLock->Release();
+			memoryPagingLock->Acquire();
+			kernel->currentThread->space->pageFault(vpn);
+			memoryPagingLock->Release();
 
-	}
-	entry = &pageTable[vpn];
+		}
+		entry = &pageTable[vpn];
     } else {
         for (entry = NULL, i = 0; i < TLBSize; i++)
-    	    if (tlb[i].valid && (tlb[i].virtualPage == vpn)) {
-		entry = &tlb[i];			// FOUND!
-		break;
-	    }
-	if (entry == NULL) {				// not found
+    	    if (tlb[i].valid && (((unsigned int)tlb[i].virtualPage) == vpn)) {
+				entry = &tlb[i];			// FOUND!
+				break;
+			}
+		if (entry == NULL) {				// not found
     	    DEBUG(dbgAddr, "Invalid TLB entry for this virtual page!");
     	    return PageFaultException;		// really, this is a TLB fault,
 						// the page may be in memory,
 						// but not in the TLB
-	}
+		}
     }
 
     if (entry->readOnly && writing) {	// trying to write to a read-only page
-	DEBUG(dbgAddr, "Write to read-only page at " << virtAddr);
-	return ReadOnlyException;
+		DEBUG(dbgAddr, "Write to read-only page at " << virtAddr);
+		return ReadOnlyException;
     }
     pageFrame = entry->physicalPage;
 
     // if the pageFrame is too big, there is something really wrong! 
     // An invalid translation was loaded into the page table or TLB. 
     if (pageFrame >= NumPhysPages) { 
-	DEBUG(dbgAddr, "Illegal pageframe " << pageFrame);
-	return BusErrorException;
+		DEBUG(dbgAddr, "Illegal pageframe " << pageFrame);
+		return BusErrorException;
     }
     entry->use = TRUE;		// set the use, dirty bits
     if (writing)
-	entry->dirty = TRUE;
+		entry->dirty = TRUE;
     *physAddr = pageFrame * PageSize + offset;
 	// cout << "phys addr = " << *physAddr << endl;
 	// cout << "thread = " << kernel->currentThread->getName()<< endl;
