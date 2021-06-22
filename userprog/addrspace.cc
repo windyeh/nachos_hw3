@@ -102,8 +102,8 @@ AddrSpace::Load(char *fileName)
     unsigned int size;
 
     if (executable == NULL) {
-	cerr << "Unable to open file " << fileName << "\n";
-	return FALSE;
+	    cerr << "Unable to open file " << fileName << "\n";
+	    return FALSE;
     }
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) && 
@@ -112,10 +112,10 @@ AddrSpace::Load(char *fileName)
     ASSERT(noffH.noffMagic == NOFFMAGIC);
 
 // how big is address space?
-    // size = noffH.code.size + noffH.initData.size + noffH.uninitData.size 
-	// 		+ UserStackSize;	// we need to increase the size
+    size = noffH.code.size + noffH.initData.size + noffH.uninitData.size + UserStackSize;	
+    // we need to increase the size
 	// 					        // to leave room for the stack
-    size = 16384;
+    //size = 16384;
     numPages = divRoundUp(size, PageSize);
     
     
